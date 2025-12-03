@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Images</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --bg-1: #0f172a;
+            --bg-2: #ffffff;
+            --accent: #22c1c3;
+            --card-bg: rgba(255,255,255,0.04);
+            --glass: rgba(255,255,255,0.06);
+            --soft-shadow: 0 8px 30px rgba(2,6,23,0.6);
+            --glass-shadow: 0 10px 30px rgba(2,6,23,0.5);
+        }
+
+        *{box-sizing: border-box}
+        html,body{
+            height: 100%;
+            margin: 0;
+            font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, 'Helvetica Neue', Arial;
+            background: radial-gradient(1200px 800px at 10% 10%, rgba(34,193,195,0.06), transparent 6%),
+                        linear-gradient(180deg, var(--bg-1), var(--bg-2));
+            color: #e6eef4;
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
+            padding: 48px 18px;
+            display: flex;
+            align-items: start;
+            justify-content: center;
+        }
+
+        .container{
+            width: min(1200px, 96%);
+        }
+
+        header{
+            display:flex;
+            align-items:center;
+            gap:14px;
+            margin-bottom: 28px;
+        }
+        header h1{
+            font-size: 20px;
+            margin: 0;
+            font-weight: 600;
+            letter-spacing: -0.2px;
+        }
+        header p{
+            margin: 0 0 0 auto;
+            font-size: 13px;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .images {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 22px;
+            align-items: start;
+        }
+
+        .card {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+            box-shadow: var(--soft-shadow);
+            transition: transform 0.36s cubic-bezier(.2,.8,.2,1), box-shadow 0.36s,
+                        filter 0.36s;
+            transform-origin: center;
+            cursor: pointer;
+            user-select: none;
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .card::before{
+            /* subtle animated border gradient */
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events:none;
+            background: linear-gradient(120deg, rgba(34,193,195,0.06), rgba(59,130,246,0.03));
+            mix-blend-mode: screen;
+            opacity: 0;
+            transition: opacity 0.36s;
+        }
+
+        .card:hover{
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: var(--glass-shadow);
+            filter: saturate(1.07);
+        }
+        .card:hover::before{ opacity: 1 }
+
+        .card img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+            aspect-ratio: 1/1;
+            transition: transform 0.56s cubic-bezier(.2,.8,.2,1), filter 0.36s;
+            transform-origin: center;
+            will-change: transform;
+        }
+        .card:hover img{
+            transform: scale(1.07) translateY(-4px);
+            filter: contrast(1.04) brightness(1.03);
+        }
+
+        .caption {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.0), rgba(0,0,0,0.48));
+            color: #ecfeff;
+            font-weight: 600;
+            font-size: 14px;
+            backdrop-filter: blur(6px);
+            transform: translateY(10px);
+            transition: transform 0.4s;
+        }
+        .card:hover .caption{
+            transform: translateY(0);
+        }
+        .tag{
+            font-size: 12px;
+            padding: 6px 8px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.06);
+            color: #aee8e7;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+
+        /* subtle floating animation */
+        @keyframes floaty {
+            0%{ transform: translateY(0px) }
+            50%{ transform: translateY(-6px) }
+            100%{ transform: translateY(0px) }
+        }
+        .card[data-animate="true"]{ animation: floaty 6s ease-in-out infinite }
+
+        /* modal / lightbox */
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            background: rgba(3,7,18,0.8);
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 180ms ease;
+        }
+        .lightbox.open{ opacity: 1; pointer-events: auto }
+        .lightbox-inner{
+            max-width: min(1100px, 96%);
+            width: min(95vw, 1100px);
+            max-height: 92vh;
+            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+            border-radius: 12px;
+            padding: 14px;
+            box-shadow: 0 40px 120px rgba(2,6,23,0.7);
+            display: grid;
+            grid-template-rows: auto 1fr;
+            gap: 8px;
+        }
+        .lightbox img{
+            max-width: 100%;
+            max-height: 80vh;
+            margin: 0 auto;
+            object-fit: contain;
+            border-radius: 8px;
+            display:block;
+        }
+        .lb-controls{
+            display:flex;
+            align-items:center;
+            justify-content: space-between;
+            gap: 8px;
+            color: rgba(255,255,255,0.9);
+        }
+        .btn{
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.04);
+            color: #e9fbfb;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.12s ease, background 0.12s;
+            user-select: none;
+        }
+        .btn:hover{ transform: translateY(-3px); background: rgba(255,255,255,0.06) }
+        .btn:active{ transform: translateY(0) }
+        .small-muted{ color: rgba(255,255,255,0.6); font-size: 13px; }
+
+        /* responsiveness */
+        @media (max-width: 560px){
+            header { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .caption { font-size: 13px; padding: 10px; }
+            .btn{ padding: 6px 8px; font-size: 13px }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Nature & Seascape Gallery</h1>
+    </header>
+
+    <div class="images">
+
+        <a class="card" data-title="Sunset over cliffs" data-animate="true"
+           href="https://images.unsplash.com/photo-1501785888041-af3ef285b470" target="_blank">
+            <img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470" alt="Sunset over cliffs">
+            <div class="caption">
+                <span class="tag">Sunset</span>
+                <span style="opacity:.86">Cliffs & ocean</span>
+            </div>
+        </a>
+
+        <a class="card" data-title="Forest path" data-animate="true"
+           href="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee" target="_blank">
+            <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee" alt="Forest path">
+            <div class="caption">
+                <span class="tag">Forest</span>
+                <span style="opacity:.86">Quiet path</span>
+            </div>
+        </a>
+
+        <a class="card" data-title="Calm sea at dusk" data-animate="true"
+           href="https://images.unsplash.com/photo-1507525428034-b723cf961d3e" target="_blank">
+            <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e" alt="Calm sea at dusk">
+            <div class="caption">
+                <span class="tag">Seascape</span>
+                <span style="opacity:.86">Waves & sky</span>
+            </div>
+        </a>
+
+    </div>
+</div>
+
+<!-- Lightbox / modal -->
+<div class="lightbox" role="dialog" aria-hidden="true" aria-label="Image preview">
+    <div class="lightbox-inner" role="document">
+        <div class="lb-controls" aria-hidden="false">
+            <div class="small-muted lb-title"> </div>
+            <div style="display:flex; gap:8px; align-items:center">
+                <button class="btn lb-close" title="Close" aria-label="Close dialog">✕</button>
+            </div>
+        </div>
+        <div style="display:grid; place-items:center; padding:6px 0;">
+            <img src="" alt="" draggable="false">
+        </div>
+    </div>
+</div>
+
+<script>
+    // lightbox behavior: open on click; supports previous/next/escape
+    (function(){
+        const cards = Array.from(document.querySelectorAll('.card'));
+        const lb = document.querySelector('.lightbox');
+        const lbImg = lb.querySelector('img');
+        const lbTitle = lb.querySelector('.lb-title');
+        const btnClose = lb.querySelector('.lb-close');
+        const btnNext = lb.querySelector('.lb-next');
+        const btnPrev = lb.querySelector('.lb-prev');
+
+        const items = cards.map(c=>{
+            return {
+                href: c.getAttribute('href'),
+                title: c.getAttribute('data-title') || c.querySelector('img')?.alt || ''
+            };
+        });
+
+        let idx = 0;
+        function open(i){
+            idx = (i + items.length) % items.length;
+            lbImg.src = items[idx].href;
+            lbImg.alt = items[idx].title || '';
+            lbTitle.textContent = items[idx].title || '';
+            lb.classList.add('open');
+            lb.setAttribute('aria-hidden','false');
+            document.body.style.overflow = 'hidden';
+        }
+        function close(){
+            lb.classList.remove('open');
+            lb.setAttribute('aria-hidden','true');
+            document.body.style.overflow = '';
+            lbImg.src = '';
+        }
+        cards.forEach((c,i)=>{
+            c.addEventListener('click', (ev)=>{
+                ev.preventDefault(); // prevent opening in new tab/url
+                open(i);
+            });
+            c.addEventListener('keydown', (ev)=>{
+                if(ev.key === 'Enter' || ev.key === ' '){
+                    ev.preventDefault();
+                    open(i);
+                }
+            });
+            c.setAttribute('tabindex','0'); // make focusable
+        });
+
+        btnClose.addEventListener('click', close);
+        btnNext.addEventListener('click', ()=> open(idx+1));
+        btnPrev.addEventListener('click', ()=> open(idx-1));
+
+        lb.addEventListener('click', (ev)=>{
+            if(ev.target === lb || ev.target === lb.querySelector('.lightbox-inner')) { close(); }
+        });
+
+        window.addEventListener('keydown', (ev)=>{
+            if(!lb.classList.contains('open')) return;
+            if(ev.key === 'Escape') close();
+            if(ev.key === 'ArrowRight') open(idx+1);
+            if(ev.key === 'ArrowLeft') open(idx-1);
+        });
+
+    })();
+</script>
+
+</body>
+</html>
